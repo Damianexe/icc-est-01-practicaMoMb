@@ -1,19 +1,21 @@
 package controllers;
-
 import models.Person;
 import views.View;
+import java.util.ArrayList;
 
 public class Controller {
     private View view;
+    private Person[] persons;
     private SortingMethods sortingMethods;
     private SearchMethods searchMethods;
 
-    private Person[] personas;
+    
 
     public Controller(View view, SortingMethods sortingMethods, SearchMethods searchMethods) {
         this.view = view;
         this.sortingMethods = sortingMethods;
         this.searchMethods = searchMethods;
+        this.persons= new Person[0]; //Arreglo Inicializado
         System.out.println("Controlador Creado");
     }
 
@@ -26,10 +28,10 @@ public class Controller {
                     inputPersons();
                     break;
                 case 2:
-                    addPerson();
+                    sortPersons();
                     break;
                 case 3:
-                    sortPersons();
+                    searchPerson();
                     break;
                 case 100:
                     System.out.println("Salir");
@@ -40,46 +42,58 @@ public class Controller {
         } while (option != 0);
     }
 
-    private void sortPersons() {
-        int sortingOption = view.selectSortingMethod();
-        if (sortingOption == 1) {
-            sortingMethods.SortByNameWithBuble();
-        } else if (sortingOption == 2) {
-            sortingMethods.SortByAgeWithSelection();
-        } else {
-            view.showMessage("Opcion InValida");
-        }
-
-    }
-
 
     public void inputPersons() {
-        int numeroPersonas = view.inputInt("Ingrese el numro de Persona");
-        personas = new Person[numeroPersonas];
-        for (int i = 0; i < numeroPersonas; i++) {
-            personas[i] = view.inputPerson();
-        }
+        Person person = view.inputPerson();
+        addPerson(person);
     }
 
-    public void addPerson() {
+    public void addPerson(Person person) {
+        Person[] newPersons = new Person[persons.length+1];
+        System.out.println("Persona Agregada");
+        System.arraycopy(persons, 0, newPersons, 0, persons.length);
+        newPersons[persons.length] = person;
+        persons= newPersons;
+    }
 
-        if (personas == null) {
-            view.showMessage("No existe, ingrese personas por primera vez");
-            inputPersons();
-
-        } else {
-            int numeroPersonas = view.inputInt("Ingrese el numero de personas a añadir");
-
-            Person[] personasTotales = new Person[personas.length + numeroPersonas];
-
-            for (int i = 0; i < personas.length; i++) {
-                personasTotales[i] = personas[i];
-            }
-
-            for (int i = personas.length; i < personasTotales.length; i++) {
-                personas[i] = view.inputPerson();
-            }
-            personas = personasTotales;
+    
+    public void sortPersons() {
+        int metodo = view.selectSortingMethod();
+        switch (metodo) {
+            case 1:
+            sortingMethods.SortByNameWithBuble(persons);
+            break;
+            case 2:
+            sortingMethods.sortbyNamewithSelectionDes(persons);
+            break;
+            case 3:
+            sortingMethods.sortByAgeWithInsertion(persons);
+            break;
+            case 4:
+            sortingMethods.sortByNamewithInsertion(persons);
+            break;
         }
+       view.displayPersons(persons); 
+    }
+
+    public void searchPerson(){
+        int criterion = view.selectSearchCriterion();
+        Person result = null;
+        if (criterion == 1) {
+            if (!searchMethods.isSortedbyName(persons)) {
+                System.out.println("List is not sorted by name.");
+                return;
+            }
+            String name = view.inputName();
+            result = searchMethods.binarySearchByName(persons, name);
+        } else if (criterion == 2) {
+            if (!searchMethods.isSortedbyName(persons)) {
+                System.out.println("List is not sorted by age.");
+                return;
+            }
+            int age = view.InputAge();
+            result = searchMethods.binarySearchbyAge(persons, age);
+        }
+        view.displaySearchResult(result);
     }
 }
